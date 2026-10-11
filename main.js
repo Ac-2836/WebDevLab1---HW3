@@ -1,10 +1,22 @@
 import { toRemaining, toParts } from "./countdown.js";
+import {
+  IDLE,
+  SUBMITTING,
+  SUCCESS,
+  ERROR,
+  transition,
+} from "./form-state.js";
+import { submitLanding } from "./mock-api.js";
 
 const targetDateInput = document.querySelector("#target-date");
 const countdownOutput = document.querySelector("#countdown");
+const form = document.querySelector("#landing-form");
+const formStatus = document.querySelector("#form-status");
+const submitButton = form.querySelector('button[type="submit"]');
 let timerId = null;
+let state = IDLE;
 
-function render(targetIso) {
+function renderCountdown(targetIso) {
   const remaining = toRemaining(targetIso, Date.now());
 
   if (remaining === 0) {
@@ -23,8 +35,8 @@ function start(targetIso) {
     clearInterval(timerId);
   }
 
-  render(targetIso);
-  timerId = setInterval(() => render(targetIso), 1000);
+  renderCountdown(targetIso);
+  timerId = setInterval(() => renderCountdown(targetIso), 1000);
 }
 
 targetDateInput.addEventListener("change", (event) => {
@@ -42,4 +54,44 @@ targetDateInput.addEventListener("change", (event) => {
   }
 
   start(date.toISOString());
+});
+
+function render() {
+  const statusMessages = {
+    [IDLE]: "",
+    [SUBMITTING]: "Sending...",
+    [SUCCESS]: "Thank you. Your message was sent.",
+    [ERROR]: "Sending failed. Please try again.",
+  };
+
+  formStatus.textContent = statusMessages[state];
+  submitButton.disabled = state === SUBMITTING;
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  state = transition(state, "SUBMIT");
+  render();
+
+  const data = {
+    name: form.elements.name.value,
+    email: form.elements.email.value,
+    message: form.elements.message.value,
+  };
+
+  submitLanding(data)
+    .then(() => {
+      state = transition(state, "RESOLVE");
+      render();
+    })
+    .catch(() => {
+      state = transition(state, "REJECT");
+      render();
+    });
 });
