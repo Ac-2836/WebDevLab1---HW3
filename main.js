@@ -7,6 +7,7 @@ import {
   transition,
 } from "./form-state.js";
 import { submitLanding } from "./mock-api.js";
+import { normalizeInput } from "./sanitize.js";
 
 const targetDateInput = document.querySelector("#target-date");
 const countdownOutput = document.querySelector("#countdown");
@@ -75,6 +76,14 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
+  const nameField = form.elements.name;
+  const emailField = form.elements.email;
+  const messageField = form.elements.message;
+
+  nameField.value = normalizeInput(nameField.value, 100);
+  emailField.value = normalizeInput(emailField.value, 254);
+  messageField.value = normalizeInput(messageField.value, 500);
+
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
@@ -84,9 +93,9 @@ form.addEventListener("submit", (event) => {
   render();
 
   const data = {
-    name: form.elements.name.value,
-    email: form.elements.email.value,
-    message: form.elements.message.value,
+    name: nameField.value,
+    email: emailField.value,
+    message: messageField.value,
   };
 
   submitLanding(data)
