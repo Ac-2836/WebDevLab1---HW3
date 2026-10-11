@@ -71,6 +71,10 @@ function render() {
 form.addEventListener("submit", (event) => {
   event.preventDefault();
 
+  if (state === SUBMITTING) {
+    return;
+  }
+
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
