@@ -44,6 +44,9 @@ targetDateInput.addEventListener("change", (event) => {
   const value = event.target.value;
 
   if (value === "") {
+    clearInterval(timerId);
+    timerId = null;
+    countdownOutput.textContent = "";
     return;
   }
 
